@@ -15,13 +15,13 @@
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
   <script>
-    // Replace this URL with your Render backend URL after deploying
+    const username = prompt('Enter your username:') || 'Anonymous';
+
     const socket = io('https://chat-g9td.onrender.com');
 
-    // When the server emits 'chat', add the message to the page
-    socket.on('chat', function(message) {
+    socket.on('chat', function(data) {
       const div = document.createElement('div');
-      div.textContent = message;
+      div.textContent = data.username + ': ' + data.text;
       document.getElementById('messages').appendChild(div);
     });
 
@@ -29,8 +29,7 @@
       const input = document.getElementById('input');
       if (input.value.trim() === '') return;
 
-      // Send 'chat' event to the server
-      socket.emit('chat', input.value);
+      socket.emit('chat', { username: username, text: input.value });
       input.value = '';
     }
 
