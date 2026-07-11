@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Simple Chat</title>
+</head>
+<body>
+
+  <div id="messages"></div>
+
+  <input id="input" type="text" placeholder="Type a message..." />
+  <button onclick="sendMessage()">Send</button>
+
+  <!-- Socket.IO client from CDN -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+  <script>
+    // Replace this URL with your Render backend URL after deploying
+    const socket = io('https://your-app.onrender.com');
+
+    // When the server emits 'chat', add the message to the page
+    socket.on('chat', function(message) {
+      const div = document.createElement('div');
+      div.textContent = message;
+      document.getElementById('messages').appendChild(div);
+    });
+
+    function sendMessage() {
+      const input = document.getElementById('input');
+      if (input.value.trim() === '') return;
+
+      // Send 'chat' event to the server
+      socket.emit('chat', input.value);
+      input.value = '';
+    }
+
+    // Send on Enter key too
+    document.getElementById('input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
+
+</body>
+</html>
