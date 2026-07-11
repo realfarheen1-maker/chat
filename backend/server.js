@@ -2,15 +2,19 @@ const http = require('http');
 const { Server } = require('socket.io');
 
 const server = http.createServer();
+const messages = [];
 
 const io = new Server(server, {
   cors: { origin: '*' }
 });
 
 io.on('connection', (socket) => {
+  messages.forEach(msg => socket.emit('chat', msg));
   console.log('user connected:', socket.id);
 
   socket.on('chat', (message) => {
+    messages.push(message);
+
     io.emit('chat', message);
   });
 
