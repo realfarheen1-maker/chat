@@ -12,8 +12,13 @@
   <button onclick="sendMessage()">Send</button>
   <button id="recordBtn">Hold to Record</button>
 
-  <!-- Socket.IO client from CDN -->
+  <hr />
+  <input id="callTarget" placeholder="Username to call..." />
+  <button onclick="startCall()">Call</button>
+  <button onclick="endCall()">Hang Up</button>
+
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <script>
     const username = prompt('Enter your username:') || 'Anonymous';
@@ -80,6 +85,50 @@
       mediaRecorder.stop();
       recordBtn.textContent = 'Hold to Record';
     });
+
+    // Live call using PeerJS
+    // Peer ID = username with spaces replaced (PeerJS doesn't allow spaces)
+    const peerId = username.replace(/\s+/g, '_').toLowerCase();
+    const peer = new Peer(peerId);
+
+    let currentCall = null;
+
+    // Someone is calling you — show a confirm popup
+    peer.on('call', (call) => {
+      if (confirm(`Incoming call from ${call.peer}. Accept?`)) {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+          call.answer(stream);
+          call.on('stream', (remoteStream) => playAudio(remoteStream));
+          currentCall = call;
+        });
+      } else {
+        call.close();
+      }
+    });
+
+    function startCall() {
+      const target = document.getElementById('callTarget').value.trim().replace(/\s+/g, '_').toLowerCase();
+      if (!target) return;
+
+      navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+        const call = peer.call(target, stream);
+        call.on('stream', (remoteStream) => playAudio(remoteStream));
+        currentCall = call;
+      });
+    }
+
+    function endCall() {
+      if (currentCall) {
+        currentCall.close();
+        currentCall = null;
+      }
+    }
+
+    function playAudio(stream) {
+      const audio = new Audio();
+      audio.srcObject = stream;
+      audio.play();
+    }
   </script>
 
 </body>
